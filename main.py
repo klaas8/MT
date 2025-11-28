@@ -137,8 +137,15 @@ def start():
         start()
 
 if 'mtluntan' in os.environ and 'ips' in os.environ:
-    fen = os.environ.get("mtluntan", "").split(",")
-    for duo in fen:
+    mtluntan = os.environ.get("mtluntan", "")
+    ips = os.environ.get("ips", "")
+    if not ips:
+        print('github ips变量未设置')
+        exit(1)
+    if not mtlunt:
+        print('github mtlunt变量未设置')
+        exit(1)
+    for duo in mtluntan.split(","):
         if ':' not in duo:
             continue
         username, password = duo.split(':', 1)
@@ -146,7 +153,5 @@ if 'mtluntan' in os.environ and 'ips' in os.environ:
         password = password.strip()
         if username and password:
             accounts_list[username] = password
-    s.update(os.environ.get("ips", "").split("\n"))
+    s.update(ips.split("\n"))
     start()
-else:
-    print('github变量未设置')    
