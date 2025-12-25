@@ -137,15 +137,15 @@ def start():
                 time.sleep(3)
         start()
 
-mtluntan = os.environ.get("mtluntan", "")
-ips = os.environ.get("ips", "")
-if not ips:
-    print('github ips变量未设置')
+ACCOUNTS = os.environ.get("ACCOUNTS", "")
+IPS = os.environ.get("IPS", "")
+if not IPS:
+    print('github IPS变量未设置')
     exit(1)
-if not mtluntan:
-    print('github mtluntan变量未设置')
+if not ACCOUNTS:
+    print('github ACCOUNTS变量未设置')
     exit(1)
-for duo in mtluntan.split(","):
+for duo in ACCOUNTS.split(","):
     if ':' not in duo:
         continue
     username, password = duo.split(':', 1)
@@ -153,5 +153,5 @@ for duo in mtluntan.split(","):
     password = password.strip()
     if username and password:
         accounts_list[username] = password
-s.update([ip for ip in ips.split("\n") if ip.strip()])
+s.update([ip for ip in IPS.split("\n") if ip.strip()])
 start()
