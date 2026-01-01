@@ -28,3 +28,5 @@ class AppPreferences:
     def close(self):
         self.db.close()
         self._instance = None
+
+prefs = AppPreferences()
