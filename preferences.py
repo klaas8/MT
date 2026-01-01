@@ -2,6 +2,8 @@ from sqlitedict import SqliteDict
 import os
 import atexit
 from pathlib import Path
+from datetime import datetime
+import pytz
 
 class Preferences:
     _instance = None
@@ -65,6 +67,18 @@ class Preferences:
     def get_db_path(self):
         return self._db_path
 
+    def getTime(self):
+        tz = pytz.timezone('Asia/Shanghai')
+        now = datetime.now(tz)
+        formatted_date = now.strftime('%Y-%m-%d')
+        return formatted_date
+
+    def getTimes(self):
+        tz = pytz.timezone('Asia/Shanghai')
+        now = datetime.now(tz)
+        formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
+        return formatted_date
+
     def save(self):
         db_path = self.get_db_path()
         if os.path.exists(db_path):
@@ -76,6 +90,6 @@ class Preferences:
                     os.system('git push --quiet --force-with-lease')
             except Exception as e:
                 print(f"Git操作失败: {e}")
-            
+
 
 prefs = Preferences()
