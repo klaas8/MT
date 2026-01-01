@@ -88,5 +88,13 @@ class Preferences:
             except Exception as e:
                 print(f"Git操作失败: {e}")
 
-
-prefs = Preferences()
+try:
+    prefs = Preferences()
+except Exception as e:
+    if hasattr(prefs, '_db_path') and prefs._db_path and os.path.exists(prefs._db_path):
+        try:
+            os.remove(prefs._db_path)
+            print(f"已删除损坏的数据库文件: {prefs._db_path}")
+        except Exception as remove_error:
+            print(f"删除损坏的数据库文件文件失败: {remove_error}")
+    prefs = Preferences()
