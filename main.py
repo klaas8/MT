@@ -17,7 +17,7 @@ Retry = {}
 accounts_list = {}
 s_list = {}
 prefs.put("theme", "dark")
-
+"""
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -179,3 +179,4 @@ for duo in ACCOUNTS.split(","):
         accounts_list[username] = password
 s.update([ip for ip in IPS.split("\n") if ip.strip()])
 start()
+"""
