@@ -65,12 +65,12 @@ def lo():
         print(f"{req_time}ms")
         IP_LIST.add(proxy)
 
-def checkIn(user, pwd, proxy):
+def checkIn(user, pwd, ip):
     req = requests.session()
     req.headers.update(headers)
     proxies = {
-        'http': f'http://{proxy}',
-        'https': f'http://{proxy}'
+        'http': f'http://{ip}',
+        'https': f'http://{ip}'
     }
     req.proxies = proxies
     print(user, "开始签到")
@@ -116,7 +116,7 @@ def checkIn(user, pwd, proxy):
                         return True
     except Exception as e:
         print(f"异常{str(e)}")
-        IP_LIST.remove(proxy)
+        IP_LIST.remove(ip)
     return False
 
 def loginhash(data):
