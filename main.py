@@ -1,18 +1,10 @@
-import json
-import requests
-import re
-import os
-import time
-import random
+import json, requests, re, os, time, random
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from preferences import prefs
 
-s = set()
-ip = ""
-total_retry_count = 0
-MAX_RETRY = 3
-Retry = {}
+IP_LIST = set()
 accounts_list = {}
-s_list = {}
+successful_proxies = []
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
@@ -21,41 +13,31 @@ headers = {
     'Connection': 'keep-alive'
 }
 
-def verify():
-    global ip
+def verify(proxy):
     target_url = 'https://bbs.binmt.cc/forum.php?mod=guide&view=hot'
-    max_attempts = min(len(s), 100)
-    attempt_count = 0
-    while s and attempt_count < max_attempts:
-        attempt_count += 1
-        if not s:
-            break
-        proxy = random.choice(list(s))
-        print(f"{attempt_count}: {proxy}")
-        proxies = {
-            'https': f'http://{proxy}',
-            'http': f'http://{proxy}'
-        }
-        try:
-            response = requests.get(target_url, headers=headers, proxies=proxies, timeout=10)
-            if response.status_code == 200:
-                print("✔")
-                ip = proxy
-                s.remove(proxy)
-                return
-        except Exception as e:
-            pass
-        s.remove(proxy)
-        print("✖")
-        time.sleep(0.1)
+    proxies = {
+        'https': f'http://{proxy}',
+        'http': f'http://{proxy}'
+    }
+    start_time = time.time()
+    try:
+        response = requests.get(target_url, headers=headers, proxies=proxies, timeout=10)
+        return proxy, response.ok, int((time.time() - start_time) * 1000)
+    except:
+        return proxy, False, -1
 
-def checkIn(user, pwd):
+def lo():
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(verify, proxy) for proxy in IP_LIST]
+        for future in as_completed(futures):
+            proxy, is_valid, requestTime = future.result()
+            if is_valid:
+                successful_proxies.append((proxy, requestTime))
+    successful_proxies.sort(key=lambda x: x[1])
+
+def checkIn(user, pwd, proxies):
     req = requests.session()
     req.headers.update(headers)
-    proxies = {
-        'http': f'http://{ip}',
-        'https': f'http://{ip}'
-    }
     req.proxies = proxies
     print(user, "开始签到")
     try:
@@ -96,12 +78,11 @@ def checkIn(user, pwd):
                     print(CDATA(resp.text))
                     if '已签' in resp.text:
                         del accounts_list[user]
-                        s_list[user] = "签到成功";
                         prefs.put(user, prefs.getTime())
+                        return True
     except Exception as e:
         print(f"异常{str(e)}")
-        Retry[user] = pwd
-        s_list[user] = "签到失败";
+    return False
 
 def loginhash(data):
     pattern = r'loginhash.*?=(.*?)[\'"]>'
@@ -125,23 +106,17 @@ def CDATA(data):
     return ''
 
 def start():
-    global Retry, total_retry_count
-    if Retry and total_retry_count < MAX_RETRY:
-        total_retry_count += 1
-        for key, value in Retry.items():
-            accounts_list[key] = value
-        Retry.clear()
-    if accounts_list:
-        verify()
-        if not ip: return
-        keys = list(accounts_list.keys())
-        total = len(keys)
-        for i, username in enumerate(keys):
-            checkIn(username, accounts_list[username])
-            if i < total - 1:
-                time.sleep(3)
-        start()
-        return;
+    keys = list(accounts_list.keys())
+    total = len(keys)
+    for i, username in enumerate(keys):
+        for proxy, req_time in successful_proxies:
+            proxies = {
+                'http': f'http://{proxy}',
+                'https': f'http://{proxy}'
+            }
+            if checkIn(username, accounts_list[username], proxies): break
+        if i < total - 1:
+            time.sleep(3)
 
 ACCOUNTS = os.environ.get("ACCOUNTS", "")
 IPS = os.environ.get("IPS", "")
@@ -162,5 +137,8 @@ for duo in ACCOUNTS.split(","):
         accounts_list[username] = password
     elif YiQianDao:
         print(username, "今日已签, 跳过签到")
-s.update([ip for ip in IPS.split("\n") if ip.strip()])
-start()
+IP_LIST.update([ip for ip in IPS.split("\n") if ip.strip()])
+if accounts_list:
+    lo()
+if successful_proxies:
+    start()
