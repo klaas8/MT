@@ -2,9 +2,6 @@ import json, requests, re, os, time, random, ipaddress
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from preferences import prefs
 
-key = f"{prefs.getTimes()}_{random.uniform(0, 100)}"
-print(key)
-prefs.put("cs", key)
 IP_LIST = {}
 accounts_list = {}
 
