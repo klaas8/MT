@@ -167,7 +167,10 @@ def start():
         total = len(keys)
         for i, username in enumerate(keys):
             for proxy in IP_LIST:
-                if checkIn(username, accounts_list[username], proxy): break
+                try:
+                    if checkIn(username, accounts_list[username], proxy): break
+                except:
+                    pass
             if i < total - 1:
                 time.sleep(3)
 
