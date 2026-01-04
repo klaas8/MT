@@ -174,12 +174,12 @@ for duo in ACCOUNTS.split(","):
     elif YiQianDao:
         print(username, "今日已签, 跳过签到")
 myset.update([ip for ip in IPS.split("\n") if ip.strip()])
-if accounts_list:
+if accounts_list or not accounts_list:
     lo()
     try:
         with open("y.txt", "w", encoding="utf-8") as f:
             f.write("\n".join(myset))
-            try:
+        try:
             os.system('git config --local user.name "github-actions[bot]" >/dev/null 2>&1')
             os.system('git config --local user.email "github-actions[bot]@users.noreply.github.com" >/dev/null 2>&1')
             os.system('git config pull.rebase true >/dev/null 2>&1')
