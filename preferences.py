@@ -29,21 +29,15 @@ class Preferences:
     def _init_or_recreate_db(self):
         db_path = self._db_path
         try:
-            os.makedirs(os.path.dirname(db_path), exist_ok=True)
             self.db = SqliteDict(db_path, autocommit=True)
         except:
             try:
-                if hasattr(self, 'db'):
-                    self.db.close()
-            except:
-                pass
-            try:
                 if os.path.exists(db_path):
                     os.remove(db_path)
+                    self.save()
             except:
                 pass
             try:
-                os.makedirs(os.path.dirname(db_path), exist_ok=True)
                 self.db = SqliteDict(db_path, autocommit=True)
             except:
                 raise
@@ -110,6 +104,6 @@ class Preferences:
                 os.system('git push --quiet --force-with-lease')
         except:
             pass
-            
+
 
 prefs = Preferences()
