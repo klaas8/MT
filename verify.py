@@ -92,13 +92,13 @@ with ThreadPoolExecutor(max_workers=20) as executor:
     futures = {executor.submit(verify, proxy): i for i, proxy in enumerate(nVerify)}
     for idx, future in enumerate(as_completed(futures), 1):
         proxy, is_valid, requestTime = future.result()
-        print(f"{idx}: {'√' if is_valid else '×'} {proxy} - {requestTime}ms")
+        print(f"{idx}: {'√' if is_valid else '×'} {proxy} [{requestTime}ms]")
         if is_valid:
             successful_proxies.append((proxy, requestTime))
             nVerify.discard(proxy)
 successful_proxies.sort(key=lambda x: x[1])
 print("\n可用IP代理:")
 for proxy, req_time in successful_proxies:
-    print(f"{proxy} {req_time}ms")
+    print(f"{proxy} - {req_time}ms")
     ips.add(proxy)
 save()
