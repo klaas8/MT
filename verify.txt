@@ -1,0 +1,103 @@
+import requests, time, ipaddress
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+nVerify = set()
+ips = set()
+
+def validate_ip_port(ip, port):
+    try:
+        ip_obj = ipaddress.ip_address(ip)
+        if ip_obj.is_multicast or ip_obj.is_unspecified:
+            return False
+    except ValueError:
+        return False
+    ip_parts = ip.split('.')
+    for part in ip_parts:
+        if not 0 <= int(part) <= 255:
+            return False
+    if not 1 <= int(port) <= 65535:
+        return False
+    return True
+
+def save():
+    fileName = "src/verify.txt"
+    fileName2 = "ips.txt"
+    try:
+        with open(fileName, "w", encoding="utf-8") as f:
+            f.write("\n".join(nVerify))
+    except Exception as e:
+        pass
+    try:
+        with open(fileName2, "w", encoding="utf-8") as f:
+            f.write("\n".join(ips))
+    except Exception as e:
+        pass
+    try:
+        os.system('git config --local user.name "github-actions[bot]" >/dev/null 2>&1')
+        os.system('git config --local user.email "github-actions[bot]@users.noreply.github.com" >/dev/null 2>&1')
+        os.system('git config pull.rebase true >/dev/null 2>&1')
+        if os.system(f'git add {fileName} {fileName2} >/dev/null 2>&1') == 0:
+            os.system('git commit -m "更新" >/dev/null 2>&1')
+            os.system('git push --quiet --force-with-lease')
+    except Exception as e:
+        pass
+
+def load():
+    fileName = "src/verify.txt"
+    fileName2 = "ips.txt"
+    try:
+        with open(fileName, "r", encoding="utf-8") as f:
+            for line in f:
+                ip = line.strip()
+                if ":" not in ip or not ip: continue
+                newIp, newPort = ip.split(':', 1)
+                if not validate_ip_port(newIp, newPort): continue
+                nVerify.add(ip)
+    except Exception as e:
+        pass
+    try:
+        with open(fileName2, "r", encoding="utf-8") as f:
+            for line in f:
+                ip = line.strip()
+                if ":" not in ip or not ip: continue
+                newIp, newPort = ip.split(':', 1)
+                if not validate_ip_port(newIp, newPort): continue
+                ips.add(ip)
+    except Exception as e:
+        pass
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+    'Connection': 'keep-alive'
+}
+
+def verify(proxy):
+    target_url = 'https://bbs.binmt.cc/forum.php?mod=guide&view=hot'
+    proxies = {
+        'https': f'http://{proxy}',
+        'http': f'http://{proxy}'
+    }
+    start_time = time.time()
+    try:
+        response = requests.get(target_url, headers=headers, proxies=proxies, timeout=10)
+        return proxy, response.ok, int((time.time() - start_time) * 1000)
+    except:
+        return proxy, False, -1
+load()
+successful_proxies = []
+with ThreadPoolExecutor(max_workers=20) as executor:
+    futures = {executor.submit(verify, proxy): i for i, proxy in enumerate(ips)}
+    for idx, future in enumerate(as_completed(futures), 1):
+        proxy, is_valid, requestTime = future.result()
+        print(f"{idx}: {"✔" if is_valid else "✖"} {proxy} - {requestTime}ms")
+        if is_valid:
+            successful_proxies.append((proxy, requestTime))
+            nVerify.discard(proxy)
+successful_proxies.sort(key=lambda x: x[1])
+print()
+for proxy, req_time in successful_proxies:
+    print(f"{proxy} - {req_time}ms")
+    ips.add(proxy)
+save()
