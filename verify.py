@@ -82,7 +82,7 @@ def verify(proxy):
     }
     start_time = time.time()
     try:
-        response = requests.get(target_url, headers=headers, proxies=proxies, timeout=10)
+        response = requests.get(target_url, headers=headers, proxies=proxies, timeout=20)
         return proxy, response.ok, int((time.time() - start_time) * 1000)
     except:
         return proxy, False, -1
