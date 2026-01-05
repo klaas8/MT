@@ -60,7 +60,7 @@ def load():
             if is_valid:
                 successful_proxies.append((proxy, requestTime))
     successful_proxies.sort(key=lambda x: x[1])
-    print("ip响应时间:")
+    print("可用ip代理:")
     for index, (proxy, req_time) in enumerate(successful_proxies, 1):
         print(f"{index}: {proxy} - {req_time}ms")
         IP_LIST[proxy] = True
