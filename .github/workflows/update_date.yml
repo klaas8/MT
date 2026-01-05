@@ -2,7 +2,7 @@ name: 保存最后更新时间
 
 on:
   repository:
-    types: [new_repo]
+    types: [created]
   push:
     branches:
       - main
