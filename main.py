@@ -41,6 +41,20 @@ def verify(proxy):
     except:
         return proxy, False, -1
 
+def is_phone_number(username):
+    pattern = r'^1[3-9]\d{9}$'
+    return re.match(pattern, username) is not None
+
+def format_phone_number(phone):
+    if len(phone) == 11:
+        return f"{phone[:3]}****{phone[-4:]}"
+    return phone
+
+def format_username(username):
+    if is_phone_number(username):
+        return format_phone_number(username)
+    return username
+
 def load():
     myset = set()
     successful_proxies = []
@@ -74,7 +88,7 @@ def checkIn(user, pwd, ip):
         'https': f'http://{ip}'
     }
     req.proxies = proxies
-    logger.info(f"{user} 开始签到")
+    logger.info(f"{format_username(user)} 开始签到")
     try:
         url = 'https://bbs.binmt.cc/member.php?mod=logging&action=login&infloat=yes&handlekey=login&inajax=1&ajaxtarget=fwin_content_login'
         resp = req.get(url, proxies=proxies, timeout=20)
@@ -157,7 +171,7 @@ def start():
         if username and password and not YiQianDao:
             accounts_list[username] = password
         elif YiQianDao:
-            logger.info(f"{username} 今日已签, 跳过签到")
+            logger.info(f"{format_username(username)} 今日已签, 跳过签到")
     if accounts_list:
         load()
     if IP_LIST:
